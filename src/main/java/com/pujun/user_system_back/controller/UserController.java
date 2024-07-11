@@ -128,7 +128,7 @@ public class UserController {
 
     /**
      * 用户信息更新
-     * @param userUpdateDTO
+     * @param userUpdateDTO 封装的userDTO
      * @param request
      * @return
      */
