@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://211.159.150.239:3306/user_system
+    username: root
+    password: 123456
+  # session保存时间为一天
+  session:
+    timeout: 86400
+server:
+  address: 0.0.0.0
+  #任意IP都能访问该后端
