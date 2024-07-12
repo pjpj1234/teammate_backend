@@ -1,16 +1,25 @@
 package com.pujun.user_system_back.once;
+import java.time.LocalDateTime;
 
 import com.alibaba.excel.EasyExcel;
-import org.apache.commons.lang3.StringUtils;
+import com.pujun.user_system_back.entity.User;
+import com.pujun.user_system_back.service.UserService;
 
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.StopWatch;
+
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 导入用户到数据库
+ *  从Excel中导入用户到数据库
  */
-public class ImportUser {
+public class ImportUserByExcel {
+
 
     public static void main(String[] args) {
         //Excel数据文件放在自己电脑上，能够找到的路径
@@ -34,4 +43,7 @@ public class ImportUser {
         }
         System.out.println("不重复的昵称总数 = " + listMap.keySet().size());
     }
+
+
+
 }

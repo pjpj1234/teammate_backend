@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.pujun.user_system_back.constant.UserConstant.ADMIN_ROLE;
 import static com.pujun.user_system_back.constant.UserConstant.USER_LOGIN_STATE;
@@ -123,6 +124,18 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "标签未输入");
         }
         List<User> userList = userService.searchUsersByTags(tagNameList);
+        return ResultUtils.success(userList);
+    }
+
+    /**
+     * 推荐页面
+     * @param request
+     * @return
+     */
+    @GetMapping("recommend")
+    public BaseResponse<List<User>> recommendUsers(HttpServletRequest request){
+        List<User> users = userService.list();
+        List<User> userList = users.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
         return ResultUtils.success(userList);
     }
 
