@@ -1,6 +1,7 @@
 package com.pujun.user_system_back.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pujun.user_system_back.common.BaseResponse;
 import com.pujun.user_system_back.common.ErrorCode;
 import com.pujun.user_system_back.common.ResultUtils;
@@ -133,9 +134,9 @@ public class UserController {
      * @return
      */
     @GetMapping("recommend")
-    public BaseResponse<List<User>> recommendUsers(HttpServletRequest request){
-        List<User> users = userService.list();
-        List<User> userList = users.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+    public BaseResponse<List<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request){
+        Page<User> users = userService.page(new Page<>(pageNum, pageSize), null);
+        List<User> userList = users.getRecords().stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
         return ResultUtils.success(userList);
     }
 
