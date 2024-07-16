@@ -12,14 +12,18 @@ import com.pujun.user_system_back.entity.DTO.UserUpdateDTO;
 import com.pujun.user_system_back.entity.User;
 import com.pujun.user_system_back.exception.BusinessException;
 import com.pujun.user_system_back.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.pujun.user_system_back.constant.UserConstant.ADMIN_ROLE;
@@ -36,10 +40,14 @@ import static com.pujun.user_system_back.constant.UserConstant.USER_LOGIN_STATE;
 @RestController
 @RequestMapping("/user")
 @CrossOrigin(origins = {"http://211.159.150.239"},allowCredentials = "true")
+@Slf4j
 public class UserController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    RedisTemplate redisTemplate;
 
     /**
      * 用户注册
@@ -134,13 +142,30 @@ public class UserController {
      * @return
      */
     @GetMapping("recommend")
-    public BaseResponse<List<User>> recommendUsers(
+    public BaseResponse<Page<User>> recommendUsers(
             @RequestParam(defaultValue = "10")long pageSize,
             @RequestParam(defaultValue = "1")long pageNum, HttpServletRequest request){
-        Page<User> users = userService.page(new Page<>(pageNum, pageSize), null);
-        List<User> userList = users.getRecords().stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
-//        return ResultUtils.success(users);
-        return ResultUtils.success(userList);
+        //若有缓存 读缓存
+        User loginUser = userService.getLoginUser(request);
+        String redisKey = String.format("teammate:recommend:userId:%s", loginUser);
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
+        if(userPage != null){
+            return ResultUtils.success(userPage);
+        }
+
+        //没有缓存 查数据库
+        userPage = userService.page(new Page<>(pageNum, pageSize), null);
+
+        //写入缓存 ctrl + alt + t快捷键
+        try { //millisecond
+            valueOperations.set(redisKey, userPage, 30000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("redis set key error" + e); //写入失败依然要返回数据
+        }
+//        List<User> userList = users.getRecords().stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+        return ResultUtils.success(userPage);
+//        return ResultUtils.success(userList);
     }
 
     /**
