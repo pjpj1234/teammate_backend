@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.pujun</groupId>
-    <artifactId>user_system_back</artifactId>
+    <artifactId>teammate_backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>user_system_back</name>
-    <description>user_system_back</description>
+    <name>teammate_backend</name>
+    <description>teammate_backend</description>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -181,7 +181,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.pujun.user_system_back.UserSystemBackApplication</mainClass>
+                    <mainClass>com.pujun.teammate_backend.TeammateBackendApplication</mainClass>
 <!--                    这个要设为false，不能跳过该Maven插件-->
                     <skip>false</skip>
                 </configuration>

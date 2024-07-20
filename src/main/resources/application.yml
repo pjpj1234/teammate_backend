@@ -2,7 +2,7 @@ spring:
   profiles:
     active: dev
   application:
-    name: user_system_back
+    name: teammate_backend
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localhost:3306/pujun
