@@ -14,6 +14,7 @@ import com.pujun.teammate_backend.exception.BusinessException;
 import com.pujun.teammate_backend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -116,6 +117,11 @@ public class UserController {
             QueryWrapper<User> findWrapper = new QueryWrapper<>();
             findWrapper.like(StringUtils.isNotBlank(userName), "userName", userName) //注意这里是notblank
                     .eq(StringUtils.isNotBlank(gender), "gender", gender);
+//            //这个方法可以直接搜索到全部条件，但是是eq，不能模糊搜索like
+//            User user = new User();
+//            BeanUtils.copyProperties(userFindDTO, user);
+//            QueryWrapper<User> findWrapper = new QueryWrapper<>(user);
+
             userList = userService.list(findWrapper);
         }
         userList.forEach(userService::getSafetyUser); //转为VO 去掉密码

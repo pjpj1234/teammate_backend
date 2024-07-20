@@ -5,7 +5,7 @@ spring:
     name: teammate_backend
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/pujun
+    url: jdbc:mysql://localhost:3306/teammate
     username: root
     password: 123456
   # session保存时间为一天 存储策略：分布式

@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 public class codeGenerator {
 
     public static void main(String[] args) {
-        FastAutoGenerator.create("jdbc:mysql://localhost:3306/pujun", "root", "pj18384831533")
+        FastAutoGenerator.create("jdbc:mysql://localhost:3306/teammate", "root", "123456")
                 .globalConfig(builder -> builder
                         .author("pujun")
                         .outputDir(Paths.get(System.getProperty("user.dir")) + "/src/main/java")
