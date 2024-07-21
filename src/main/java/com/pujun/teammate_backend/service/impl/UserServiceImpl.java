@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -215,6 +216,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //更新信息
         User newUser = new User();
         BeanUtils.copyProperties(userUpdateDTO, newUser); //此时newUser里面有些字段是空值
+        newUser.setUpdateTime(LocalDateTime.now()); //更新时间
         int result = userMapper.updateById(newUser); //空值不会覆盖原有的数据
 
         return result > 0;

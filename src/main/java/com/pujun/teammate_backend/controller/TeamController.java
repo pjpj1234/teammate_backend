@@ -7,8 +7,10 @@ import com.pujun.teammate_backend.common.BaseResponse;
 import com.pujun.teammate_backend.common.ErrorCode;
 import com.pujun.teammate_backend.common.PageRequest;
 import com.pujun.teammate_backend.common.ResultUtils;
+import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
 import com.pujun.teammate_backend.entity.Team;
+import com.pujun.teammate_backend.entity.User;
 import com.pujun.teammate_backend.exception.BusinessException;
 import com.pujun.teammate_backend.service.TeamService;
 import com.pujun.teammate_backend.service.UserService;
@@ -18,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -43,19 +46,17 @@ public class TeamController {
     private TeamService teamService;
 
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team){
-        if(team == null){
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddDTO teamAddDTO, HttpServletRequest request){
+        if(teamAddDTO == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
-        boolean save = teamService.save(team);
-        if(!save){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "插入失败");
-        }
-        return ResultUtils.success(team.getId());
+        User loginUser = userService.getLoginUser(request);
+        Long teamId = teamService.addTeam(teamAddDTO, loginUser);
+        return ResultUtils.success(teamId);
     }
 
     @DeleteMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody Long id){
+    public BaseResponse<Boolean> deleteTeam(@RequestParam Long id){
         if(id <= 0){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }

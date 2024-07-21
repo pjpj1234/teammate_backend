@@ -40,8 +40,8 @@ create table user_team
 (
     id           bigint auto_increment comment 'id'
         primary key,
-    user_id      bigint                             null comment '用户id',
-    team_id      bigint                             null comment '队伍id',
+    userId      bigint                             null comment '用户id',
+    teamId      bigint                             null comment '队伍id',
     joinTime     datetime default CURRENT_TIMESTAMP null comment '加入时间',
     createTime   datetime default CURRENT_TIMESTAMP null comment '创建时间',
     updateTime   datetime default CURRENT_TIMESTAMP null comment '更新时间',

@@ -3,13 +3,15 @@ package com.pujun.teammate_backend.entity.DTO;
 import com.pujun.teammate_backend.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
 import java.util.List;
 
+/**
+ * 队伍查询DTO
+ */
 @EqualsAndHashCode(callSuper = true) //传值时，比较赋值父类的页码、大小
 @Data
 public class TeamQueryDTO extends PageRequest { //继承PageRequest得到 页面字段
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -5181086307441548651L;
 
     /**
      * id

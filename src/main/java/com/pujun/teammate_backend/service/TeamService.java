@@ -1,7 +1,9 @@
 package com.pujun.teammate_backend.service;
 
+import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
 import com.pujun.teammate_backend.entity.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.pujun.teammate_backend.entity.User;
 
 /**
  * <p>
@@ -13,4 +15,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface TeamService extends IService<Team> {
 
+    /**
+     * 添加队伍
+     * @param teamAddDTO
+     * @return
+     */
+    Long addTeam(TeamAddDTO teamAddDTO, User loginUser);
 }
