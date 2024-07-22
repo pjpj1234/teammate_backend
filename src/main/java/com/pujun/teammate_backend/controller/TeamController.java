@@ -9,6 +9,7 @@ import com.pujun.teammate_backend.common.PageRequest;
 import com.pujun.teammate_backend.common.ResultUtils;
 import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
+import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
 import com.pujun.teammate_backend.entity.Team;
 import com.pujun.teammate_backend.entity.User;
 import com.pujun.teammate_backend.entity.VO.TeamUserVO;
@@ -69,11 +70,12 @@ public class TeamController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody Team team){
-        if(team == null){
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateDTO teamUpdateDTO, HttpServletRequest request){
+        if(teamUpdateDTO == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
-        boolean result = teamService.updateById(team);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.updateTeam(teamUpdateDTO, loginUser);
         if(!result){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新失败");
         }

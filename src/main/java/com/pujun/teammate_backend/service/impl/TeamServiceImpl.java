@@ -5,6 +5,7 @@ import com.pujun.teammate_backend.common.ErrorCode;
 import com.pujun.teammate_backend.common.TeamStatusEnum;
 import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
+import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
 import com.pujun.teammate_backend.entity.Team;
 import com.pujun.teammate_backend.entity.User;
 import com.pujun.teammate_backend.entity.UserTeam;
@@ -26,6 +27,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -213,6 +215,42 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             teamUserVOList.add(teamUserVO);
         }
         return teamUserVOList;
+    }
+
+    @Override
+    public boolean updateTeam(TeamUpdateDTO teamUpdateDTO, User loginUser) {
+//    1. 判断请求参数是否为空
+        if(teamUpdateDTO == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+//    2. 修改队伍是否存在
+        Long id = teamUpdateDTO.getId();
+        Team oldTeam = this.getById(id);
+        if(oldTeam == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "修改队伍不存在");
+        }
+//    3. 只有管理员和自己创建的队伍能修改
+        if(!userService.isAdmin(loginUser) && oldTeam.getUserId() != loginUser.getId()){
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+//    4. 如果用户传入的新值和老值一样，就不用 update 了（可自行实现，降低使用数据库次数）TODO
+        Team newTeam = new Team();
+        BeanUtils.copyProperties(oldTeam,newTeam); //把 原来的值 + 多余字段 放入
+        BeanUtils.copyProperties(teamUpdateDTO, newTeam); //覆盖原来的值 多余字段不变 组成新的team
+        if(newTeam.equals(oldTeam)){ //原来的值与现在的值相等 这里用equals 对象之间比较用equals 别用==
+            return true;
+        }
+//    5. 如果队伍状态为加密，那必须要有密码
+        Integer status = teamUpdateDTO.getStatus();
+        TeamStatusEnum statusEnum = TeamStatusEnum.getTeamStatusByValue(status);
+        if(statusEnum != TeamStatusEnum.PUBLIC){
+            if(StringUtils.isBlank(teamUpdateDTO.getPassword())){
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "加密状态必须有密码");
+            }
+        }
+//    6. 更新完成
+        newTeam.setUpdateTime(LocalDateTime.now());
+        return this.updateById(newTeam);
     }
 
 
