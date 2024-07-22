@@ -11,6 +11,7 @@ import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
 import com.pujun.teammate_backend.entity.Team;
 import com.pujun.teammate_backend.entity.User;
+import com.pujun.teammate_backend.entity.VO.TeamUserVO;
 import com.pujun.teammate_backend.exception.BusinessException;
 import com.pujun.teammate_backend.service.TeamService;
 import com.pujun.teammate_backend.service.UserService;
@@ -91,17 +92,27 @@ public class TeamController {
         return ResultUtils.success(team);
     }
 
+//    @GetMapping("/list")
+//    public BaseResponse<List<Team>> listTeams(TeamQueryDTO teamQueryDTO){//get请求路径中怎么加DTO？
+//        if(teamQueryDTO == null){
+//            throw new BusinessException(ErrorCode.PARAM_ERROR);
+//        }
+//
+//        Team team = new Team();
+//        BeanUtils.copyProperties(teamQueryDTO, team);
+//        QueryWrapper<Team> teamQueryWrapper = new QueryWrapper<>(team);
+//        List<Team> teamList = teamService.list(teamQueryWrapper);
+//
+//        return ResultUtils.success(teamList);
+//    }
+
     @GetMapping("/list")
-    public BaseResponse<List<Team>> listTeams(TeamQueryDTO teamQueryDTO){//get请求路径中怎么加DTO？
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQueryDTO teamQueryDTO, HttpServletRequest request){//get请求路径中怎么加DTO？
         if(teamQueryDTO == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
-
-        Team team = new Team();
-        BeanUtils.copyProperties(teamQueryDTO, team);
-        QueryWrapper<Team> teamQueryWrapper = new QueryWrapper<>(team);
-        List<Team> teamList = teamService.list(teamQueryWrapper);
-
+        boolean isAdmin = userService.isAdmin(request);
+        List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, isAdmin);
         return ResultUtils.success(teamList);
     }
 

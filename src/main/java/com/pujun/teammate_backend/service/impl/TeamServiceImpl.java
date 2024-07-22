@@ -4,22 +4,28 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.pujun.teammate_backend.common.ErrorCode;
 import com.pujun.teammate_backend.common.TeamStatusEnum;
 import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
+import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
 import com.pujun.teammate_backend.entity.Team;
 import com.pujun.teammate_backend.entity.User;
 import com.pujun.teammate_backend.entity.UserTeam;
+import com.pujun.teammate_backend.entity.VO.TeamUserVO;
+import com.pujun.teammate_backend.entity.VO.UserVO;
 import com.pujun.teammate_backend.exception.BusinessException;
 import com.pujun.teammate_backend.mapper.TeamMapper;
 import com.pujun.teammate_backend.mapper.UserTeamMapper;
 import com.pujun.teammate_backend.service.TeamService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pujun.teammate_backend.service.UserService;
 import com.pujun.teammate_backend.service.UserTeamService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,6 +45,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
     @Resource
     private UserTeamService userTeamService;
+
+    @Resource
+    private UserService userService;
 
     @Override
     public Long addTeam(TeamAddDTO teamAddDTO, User loginUser) {
@@ -123,4 +132,88 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
         return teamId;
     }
+
+    @Override
+    public List<TeamUserVO> listTeams(TeamQueryDTO teamQueryDTO, boolean isAdmin) {
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        if(teamQueryDTO != null){
+        //    private Long id;
+            Long id = teamQueryDTO.getId();
+            if(id != null && id > 0){
+                queryWrapper.eq("id", id);
+            }
+        //    private List<Long> idList; todo
+        //    private String searchText;
+            String searchText = teamQueryDTO.getSearchText();
+            if(StringUtils.isNotBlank(searchText)){
+                queryWrapper.and(qw -> qw.like("name", searchText).or()
+                        .like("description", searchText));
+            }
+        //    private String name;
+            String name = teamQueryDTO.getName();
+            if(StringUtils.isNotBlank(name)){
+                queryWrapper.like("name", name);
+            }
+        //    private String description;
+            String description = teamQueryDTO.getDescription();
+            if(StringUtils.isNotBlank(description)){
+                queryWrapper.like("description", description);
+            }
+            //    private Integer maxNum;
+            Integer maxNum = teamQueryDTO.getMaxNum();
+            if(maxNum != null && maxNum > 0){
+                queryWrapper.eq("maxNum", maxNum);
+            }
+            //    private Long userId;
+            Long userId = teamQueryDTO.getUserId();
+            if(userId != null && userId > 0){
+                queryWrapper.eq("userId", userId);
+            }
+            //    private Integer status;
+            Integer status = teamQueryDTO.getStatus();
+            TeamStatusEnum statusEnum = TeamStatusEnum.getTeamStatusByValue(status);
+            if(statusEnum == null){
+                statusEnum = TeamStatusEnum.PUBLIC;
+            }
+            if(!isAdmin && statusEnum != TeamStatusEnum.PUBLIC){ //管理员才能查看加密队伍
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            }
+            queryWrapper.eq("status", statusEnum.getValue());
+        }
+
+        //不展示过期的队伍 (没有过期时间的相当于永久）
+        queryWrapper.and(qw -> qw.gt("expireTime", LocalDateTime.now())
+                .or().isNull("expireTime"));
+
+        //关联查询已加入的队伍信息
+        //1. SQL select * from Team t left join User u on t.userId=u.id
+        List<Team> teamList = this.list(queryWrapper);
+        if(teamList == null){
+            return new ArrayList<>();
+        }
+        //for循环列表 根据 userId来查找 user中的数据 再设置到 VO中
+        List<TeamUserVO> teamUserVOList = new ArrayList<>();
+        for (Team team : teamList) {
+            Long userId = team.getUserId();
+            if(userId == null){
+                continue;
+            }
+            User user = userService.getById(userId);
+
+            //装入VO
+            TeamUserVO teamUserVO = new TeamUserVO();
+            BeanUtils.copyProperties(team, teamUserVO);
+            //创始人不为空 脱敏放入
+            if(user != null){
+                UserVO userVO = new UserVO();
+                BeanUtils.copyProperties(user, userVO);
+                teamUserVO.setCreateUser(userVO);
+            }
+
+            teamUserVOList.add(teamUserVO);
+        }
+        return teamUserVOList;
+    }
+
+
 }

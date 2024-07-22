@@ -30,6 +30,8 @@ server:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
+    #当为true时：mybatis-plus会将Java对象的驼峰式命名的常量转成下划线的方式，再与数据库表列字段进行匹配，这样会造成错误。 此时需要利用@TableField注解指定常量在表中的列名。
+    #当为false时：不会转，直接对应。
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:

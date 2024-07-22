@@ -30,14 +30,14 @@ public class Knife4jConfig {//对于配置类要求可以看懂即可，不用�
                 .paths(PathSelectors.any())
                 .build();
     }
-    private static final String API_TILE="用户管理系统项目";
+    private static final String API_TILE="组友联盟系统项目";
     //文档信息配置
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 // 文档标题
                 .title(API_TILE)
                 // 文档描述信息
-                .description("用户管理系统在线API文档")
+                .description("组友联盟在线API文档")
                 // 文档版本号
                 .version("1.0")
                 .build();
