@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.pujun.teammate_backend.common.ErrorCode;
 import com.pujun.teammate_backend.common.TeamStatusEnum;
 import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
+import com.pujun.teammate_backend.entity.DTO.TeamJoinDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
 import com.pujun.teammate_backend.entity.Team;
@@ -50,6 +51,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
     @Resource
     private UserService userService;
+
 
     @Override
     public Long addTeam(TeamAddDTO teamAddDTO, User loginUser) {
@@ -104,7 +106,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
 //    - 校验一个用户最多创建 5 个属于他自己的队伍
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId" , teamAddDTO.getUserId());
+        queryWrapper.eq("userId" , loginUser.getId());
         long hasTeamNum = this.count(queryWrapper);
         if(hasTeamNum >= 5){
             throw new BusinessException(ErrorCode.PARAM_ERROR, "用户最多创建 5 个队伍");
@@ -113,8 +115,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 //  4. 插入队伍信息到队伍表中
         Long userId = loginUser.getId();
         Team team = new Team();
-        team.setUserId(userId);
         BeanUtils.copyProperties(teamAddDTO, team);
+        team.setUserId(userId); //这个放后面！！！ 小bug造成大错
         boolean save = this.save(team);
         Long teamId = team.getId();
         if(!save || teamId == null){
@@ -230,7 +232,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             throw new BusinessException(ErrorCode.PARAM_ERROR, "修改队伍不存在");
         }
 //    3. 只有管理员和自己创建的队伍能修改
-        if(!userService.isAdmin(loginUser) && oldTeam.getUserId() != loginUser.getId()){
+        if(!userService.isAdmin(loginUser) && !oldTeam.getUserId().equals(loginUser.getId())){
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
 //    4. 如果用户传入的新值和老值一样，就不用 update 了（可自行实现，降低使用数据库次数）TODO
@@ -251,6 +253,69 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 //    6. 更新完成
         newTeam.setUpdateTime(LocalDateTime.now());
         return this.updateById(newTeam);
+    }
+
+    @Override
+    public boolean joinTeam(TeamJoinDTO teamJoinDTO, User loginUser) {
+        if(teamJoinDTO == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+//      2. 队伍必须存在，只能加入未满、未过期的队伍
+        Long teamId = teamJoinDTO.getTeamId();
+        if(teamId == null || teamId < 0){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "请求队伍不存在");
+        }
+        Team team = this.getById(teamId);
+        if(team == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "请求队伍不存在");
+        }
+        LocalDateTime expireTime = team.getExpireTime();
+        if(expireTime != null && LocalDateTime.now().isAfter(expireTime)){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "请求队伍已过期");
+        }
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId", teamId);
+        Long teamHasJoinNum = userTeamMapper.selectCount(queryWrapper);
+        if(teamHasJoinNum >= team.getMaxNum()){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "队伍人数已满");
+        }
+//      3. 不能加入自己的队伍，不能加入已加过的队伍
+        Long userId = loginUser.getId();
+        if(team.getUserId().equals(userId)){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "不能加入自己队伍");
+        }
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId", userId).eq("teamId", teamId);
+        Long hasUserJoinTeam = userTeamMapper.selectCount(queryWrapper);
+        if(hasUserJoinTeam > 0){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "不能加入已加入的队伍");
+        }
+//      1. 用户最多参加 5 个队伍 （数据库查询放在下面，减少查询时间）
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId", userId);
+        Long hasJoinNum = userTeamMapper.selectCount(queryWrapper);
+        if(hasJoinNum >= 5){
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "用户最多创建和加入 5 个队伍");
+        }
+//      4. 禁止加入 私有 的队伍
+        Integer status = team.getStatus();
+        TeamStatusEnum teamStatusEnum = TeamStatusEnum.getTeamStatusByValue(status);
+        if (TeamStatusEnum.PRIVATE.equals(teamStatusEnum)) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "禁止加入私有队伍");
+        }
+//      5. 如果加入队伍是 私密状态， 必须密码匹配
+        String password = teamJoinDTO.getPassword();
+        if (TeamStatusEnum.SECRET.equals(teamStatusEnum)) {
+            if (StringUtils.isBlank(password) || !password.equals(team.getPassword())) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "密码错误");
+            }
+        }
+//      6. 新增队伍 - 用户关联信息
+        UserTeam userTeam = new UserTeam();
+        userTeam.setUserId(userId);
+        userTeam.setTeamId(teamId);
+        userTeam.setJoinTime(LocalDateTime.now());
+        return userTeamService.save(userTeam);
     }
 
 

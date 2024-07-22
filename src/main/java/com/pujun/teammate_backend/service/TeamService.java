@@ -1,6 +1,7 @@
 package com.pujun.teammate_backend.service;
 
 import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
+import com.pujun.teammate_backend.entity.DTO.TeamJoinDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
 import com.pujun.teammate_backend.entity.Team;
@@ -42,4 +43,11 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean updateTeam(TeamUpdateDTO teamUpdateDTO, User loginUser);
+
+    /**
+     * 加入队伍
+     * @param teamJoinDTO
+     * @param loginUser
+     */
+    boolean joinTeam(TeamJoinDTO teamJoinDTO, User loginUser);
 }

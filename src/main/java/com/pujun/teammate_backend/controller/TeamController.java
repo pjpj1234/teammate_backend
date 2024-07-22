@@ -8,6 +8,7 @@ import com.pujun.teammate_backend.common.ErrorCode;
 import com.pujun.teammate_backend.common.PageRequest;
 import com.pujun.teammate_backend.common.ResultUtils;
 import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
+import com.pujun.teammate_backend.entity.DTO.TeamJoinDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
 import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
 import com.pujun.teammate_backend.entity.Team;
@@ -116,6 +117,19 @@ public class TeamController {
         boolean isAdmin = userService.isAdmin(request);
         List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, isAdmin);
         return ResultUtils.success(teamList);
+    }
+
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(TeamJoinDTO teamJoinDTO, HttpServletRequest request){
+        if(teamJoinDTO == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.joinTeam(teamJoinDTO, loginUser);
+        if(!result){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "加入队伍失败");
+        }
+        return ResultUtils.success(true);
     }
 
     @GetMapping("/list/page")
