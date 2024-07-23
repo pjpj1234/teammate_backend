@@ -7,10 +7,7 @@ import com.pujun.teammate_backend.common.BaseResponse;
 import com.pujun.teammate_backend.common.ErrorCode;
 import com.pujun.teammate_backend.common.PageRequest;
 import com.pujun.teammate_backend.common.ResultUtils;
-import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
-import com.pujun.teammate_backend.entity.DTO.TeamJoinDTO;
-import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
-import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
+import com.pujun.teammate_backend.entity.DTO.*;
 import com.pujun.teammate_backend.entity.Team;
 import com.pujun.teammate_backend.entity.User;
 import com.pujun.teammate_backend.entity.VO.TeamUserVO;
@@ -36,7 +33,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://211.159.150.239"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
 public class TeamController {
 
     @Resource
@@ -59,11 +56,12 @@ public class TeamController {
     }
 
     @DeleteMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestParam Long id){
+    public BaseResponse<Boolean> deleteTeam(@RequestParam Long id, HttpServletRequest request){
         if(id <= 0){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
-        boolean result = teamService.removeById(id);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.removeTeam(id, loginUser);
         if(!result){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"删除失败");
         }
@@ -130,6 +128,16 @@ public class TeamController {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "加入队伍失败");
         }
         return ResultUtils.success(true);
+    }
+
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitDTO teamQuitDTO, HttpServletRequest request){
+        if (teamQuitDTO == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.quitTeam(teamQuitDTO, loginUser);
+        return ResultUtils.success(result);
     }
 
     @GetMapping("/list/page")

@@ -10,7 +10,9 @@ public enum ErrorCode {
     NULL_ERROR(401 , "请求数据为空", ""),
     NO_AUTH_ERROR(402 , "无权限", ""),
     NOT_LOGIN_ERROR (403 , "未登录", ""),
-    SYSTEM_ERROR(404 , "系统异常", "");
+    SYSTEM_ERROR(404 , "系统异常", ""),
+    FORBIDDEN(405, "禁止操作", "");
+
     /**
      * 状态码
      */

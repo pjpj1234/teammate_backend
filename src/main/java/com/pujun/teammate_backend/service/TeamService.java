@@ -1,9 +1,6 @@
 package com.pujun.teammate_backend.service;
 
-import com.pujun.teammate_backend.entity.DTO.TeamAddDTO;
-import com.pujun.teammate_backend.entity.DTO.TeamJoinDTO;
-import com.pujun.teammate_backend.entity.DTO.TeamQueryDTO;
-import com.pujun.teammate_backend.entity.DTO.TeamUpdateDTO;
+import com.pujun.teammate_backend.entity.DTO.*;
 import com.pujun.teammate_backend.entity.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pujun.teammate_backend.entity.User;
@@ -50,4 +47,20 @@ public interface TeamService extends IService<Team> {
      * @param loginUser
      */
     boolean joinTeam(TeamJoinDTO teamJoinDTO, User loginUser);
+
+    /**
+     * 退出队伍
+     * @param teamQuitDTO
+     * @param loginUser
+     * @return
+     */
+    boolean quitTeam(TeamQuitDTO teamQuitDTO, User loginUser);
+
+    /**
+     * 删除队伍
+     * @param id
+     * @param loginUser
+     * @return
+     */
+    boolean removeTeam(Long id, User loginUser);
 }

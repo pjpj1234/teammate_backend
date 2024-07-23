@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(CorsRegistry registry) { //经过测试 这个类对跨域没有帮助
         // 设置允许跨域的路径
         registry.addMapping("/api/**")
                 // 设置允许跨域请求的域名
@@ -18,7 +18,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "http://127.0.0.1:9527",
                         "http://127.0.0.1:8082",
                         "http://127.0.0.1:8083",
-                        "http://211.159.150.239")
+                        "http://211.159.150.239",
+                        "http://localhost:3000")
                 // 是否允许证书 不再默认开启
                 .allowCredentials(true)
                 // 设置允许的方法

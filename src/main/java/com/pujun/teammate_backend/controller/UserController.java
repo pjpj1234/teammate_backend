@@ -40,7 +40,7 @@ import static com.pujun.teammate_backend.constant.UserConstant.USER_LOGIN_STATE;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://211.159.150.239"},allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000"},allowCredentials = "true")
 @Slf4j
 public class UserController {
 
