@@ -27,11 +27,13 @@ public interface TeamService extends IService<Team> {
 
     /**
      * 查询队伍列表
+     *
      * @param teamQueryDTO
      * @param isAdmin
+     * @param isMy 是否为获得自己加入或创建的队伍
      * @return
      */
-    List<TeamUserVO> listTeams(TeamQueryDTO teamQueryDTO, boolean isAdmin);
+    List<TeamUserVO> listTeams(TeamQueryDTO teamQueryDTO, boolean isAdmin,boolean isMy);
 
     /**
      * 更新队伍

@@ -136,7 +136,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     }
 
     @Override
-    public List<TeamUserVO> listTeams(TeamQueryDTO teamQueryDTO, boolean isAdmin) {
+    public List<TeamUserVO> listTeams(TeamQueryDTO teamQueryDTO, boolean isAdmin, boolean isMy) {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
         if(teamQueryDTO != null){
         //    private Long id;
@@ -144,7 +144,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             if(id != null && id > 0){
                 queryWrapper.eq("id", id);
             }
-        //    private List<Long> idList; todo
+        //    private List<Long> idList; 我自己加入的队伍 列表（复用该方法）
+            List<Long> idList = teamQueryDTO.getIdList();
+            if(CollectionUtils.isNotEmpty(idList)){
+                queryWrapper.in("id", idList);
+            }
         //    private String searchText;
             String searchText = teamQueryDTO.getSearchText();
             if(StringUtils.isNotBlank(searchText)){
@@ -172,15 +176,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                 queryWrapper.eq("userId", userId);
             }
             //    private Integer status;
-            Integer status = teamQueryDTO.getStatus();
-            TeamStatusEnum statusEnum = TeamStatusEnum.getTeamStatusByValue(status);
-            if(statusEnum == null){
-                statusEnum = TeamStatusEnum.PUBLIC;
+            if(!isMy) { // 不是获得自己的队伍才添加搜索状态
+                Integer status = teamQueryDTO.getStatus();
+                TeamStatusEnum statusEnum = TeamStatusEnum.getTeamStatusByValue(status);
+                if(statusEnum == null){
+                    statusEnum = TeamStatusEnum.PUBLIC;
+                }
+                if(!isAdmin && statusEnum != TeamStatusEnum.PUBLIC){ //管理员才能查看加密队伍
+                    throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+                }
+                queryWrapper.eq("status", statusEnum.getValue());
             }
-            if(!isAdmin && statusEnum != TeamStatusEnum.PUBLIC){ //管理员才能查看加密队伍
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-            }
-            queryWrapper.eq("status", statusEnum.getValue());
         }
 
         //不展示过期的队伍 (没有过期时间的相当于永久）
@@ -190,7 +196,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         //关联查询已加入的队伍信息
         //1. SQL select * from Team t left join User u on t.userId=u.id
         List<Team> teamList = this.list(queryWrapper);
-        if(teamList == null){
+        if(CollectionUtils.isEmpty(teamList)){ // 用CollectionUtils判断！！！
             return new ArrayList<>();
         }
         //for循环列表 根据 userId来查找 user中的数据 再设置到 VO中

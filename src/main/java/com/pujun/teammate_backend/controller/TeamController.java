@@ -1,27 +1,29 @@
 package com.pujun.teammate_backend.controller;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pujun.teammate_backend.common.BaseResponse;
 import com.pujun.teammate_backend.common.ErrorCode;
-import com.pujun.teammate_backend.common.PageRequest;
 import com.pujun.teammate_backend.common.ResultUtils;
 import com.pujun.teammate_backend.entity.DTO.*;
 import com.pujun.teammate_backend.entity.Team;
 import com.pujun.teammate_backend.entity.User;
+import com.pujun.teammate_backend.entity.UserTeam;
 import com.pujun.teammate_backend.entity.VO.TeamUserVO;
 import com.pujun.teammate_backend.exception.BusinessException;
 import com.pujun.teammate_backend.service.TeamService;
 import com.pujun.teammate_backend.service.UserService;
+import com.pujun.teammate_backend.service.UserTeamService;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -44,6 +46,9 @@ public class TeamController {
 
     @Resource
     private TeamService teamService;
+
+    @Resource
+    private UserTeamService userTeamService;
 
     @PostMapping("/add")
     public BaseResponse<Long> addTeam(@RequestBody TeamAddDTO teamAddDTO, HttpServletRequest request){
@@ -114,7 +119,50 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         boolean isAdmin = userService.isAdmin(request);
-        List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, isAdmin);
+        List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, isAdmin, false);
+        return ResultUtils.success(teamList);
+    }
+
+    /**
+     * 获取我加入过的队伍 复用方法
+     * @param teamQueryDTO
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/my/join")
+    public BaseResponse<List<TeamUserVO>> listMyJoinTeams(TeamQueryDTO teamQueryDTO, HttpServletRequest request){
+        if(teamQueryDTO == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        //找出自己加入的队伍
+        Long userId = userService.getLoginUser(request).getId();
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId", userId);
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        //取出不重复的队伍 id （保险起见 去重）
+        Map<Long, List<UserTeam>> listMap = userTeamList.stream() //分组为 teamId、UserTeam的map
+                .collect(Collectors.groupingBy(UserTeam::getTeamId)); //之前 easyExcel导入时使用过 理解过
+        List<Long> idList = new ArrayList<>(listMap.keySet()); //取key（teamId）出来
+        teamQueryDTO.setIdList(idList); //设置进去
+        List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, true, true);//复用方法
+        return ResultUtils.success(teamList);
+    }
+
+    /**
+     * 获取我创建的队伍 复用方法
+     * @param teamQueryDTO
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/my/create")
+    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQueryDTO teamQueryDTO, HttpServletRequest request){
+        if(teamQueryDTO == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        //找出自己创建的队伍
+        Long userId = userService.getLoginUser(request).getId();
+        teamQueryDTO.setUserId(userId);
+        List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, true, true);//复用方法
         return ResultUtils.success(teamList);
     }
 

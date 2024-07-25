@@ -19,7 +19,7 @@ public class TeamQueryDTO extends PageRequest { //继承PageRequest得到 页面
     private Long id;
 
     /**
-     *  id列表
+     *  id列表 用来查询该用户所加入的teamId列表
      */
     private List<Long> idList;
 
