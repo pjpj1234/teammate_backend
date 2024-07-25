@@ -232,7 +232,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // like ‘%Java%' and like '%python%'
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         for (String tagName : tagNameList) {
-            queryWrapper = queryWrapper.like("tags", tagName);
+//            if(tagName.equals("男") || tagName.equals("女")){ //新加了一个男女搜索
+//                queryWrapper = queryWrapper.eq("gender", tagName.equals("男") ? 0 : 1);
+//            }
+//            else{
+//                queryWrapper = queryWrapper.like("tags", tagName);
+//            }
+                queryWrapper.and(qw -> qw.eq(tagName.equals("男"),"gender", 0)
+                        .eq(tagName.equals("女"),"gender", 1)
+                        .or()
+                        .like("tags", tagName)); // 用or也会对后面的进行搜索 性能不好
         }
         List<User> userList = userMapper.selectList(queryWrapper);
         log.info("SQL time = " + (System.currentTimeMillis()- startTime)); //结束时间

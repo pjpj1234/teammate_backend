@@ -55,8 +55,9 @@ public class TeamController {
         return ResultUtils.success(teamId);
     }
 
-    @DeleteMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestParam Long id, HttpServletRequest request){
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteTeam(@RequestBody TeamDeleteDTO teamDeleteDTO, HttpServletRequest request){
+        long id = teamDeleteDTO.getId();
         if(id <= 0){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
@@ -118,7 +119,7 @@ public class TeamController {
     }
 
     @PostMapping("/join")
-    public BaseResponse<Boolean> joinTeam(TeamJoinDTO teamJoinDTO, HttpServletRequest request){
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinDTO teamJoinDTO, HttpServletRequest request){
         if(teamJoinDTO == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
@@ -143,7 +144,7 @@ public class TeamController {
     @GetMapping("/list/page")
     //小技巧：把teamQueryDTO设为继承pageRequest 并开启EqualAndHashCode 可直接比较赋值到父类的页码和大小
     // 这样就可以用 teamQueryDTO 来查 带标签、页码
-    public BaseResponse<Page<Team>> listTeamsByPage(TeamQueryDTO teamQueryDTO){
+    public BaseResponse<Page<Team>> listTeamsByPage(@RequestBody TeamQueryDTO teamQueryDTO){
         if(teamQueryDTO == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }

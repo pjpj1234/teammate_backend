@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -138,7 +139,7 @@ public class UserController {
         if(CollectionUtils.isEmpty(tagNameList)){
             throw new BusinessException(ErrorCode.PARAM_ERROR, "标签未输入");
         }
-        List<User> userList = userService.searchUsersByTags(tagNameList);
+        List<User> userList = userService.searchUsersByTagsBySQL(tagNameList);
         return ResultUtils.success(userList);
     }
 
@@ -180,13 +181,28 @@ public class UserController {
      * @param request
      * @return
      */
-    @PutMapping("/update")
-    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateDTO userUpdateDTO, HttpServletRequest request){
+    @PostMapping("/updateAll")
+    public BaseResponse<Boolean> updateUserAll(@RequestBody UserUpdateDTO userUpdateDTO, HttpServletRequest request){
         if(userUpdateDTO == null || request == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
         boolean result = userService.updateUser(userUpdateDTO, loginUser);
+        return ResultUtils.success(result); //成功返回的data就是1
+    }
+
+    @PostMapping("/update")
+    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateDTO userUpdateDTO, HttpServletRequest request){
+        if(userUpdateDTO == null || request == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        if(!Objects.equals(loginUser.getId(), userUpdateDTO.getId())){
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改");
+        }
+        User user = new User();
+        BeanUtils.copyProperties(userUpdateDTO, user);
+        boolean result = userService.updateById(user);
         return ResultUtils.success(result); //成功返回的data就是1
     }
 
