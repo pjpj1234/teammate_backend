@@ -176,6 +176,21 @@ public class UserController {
     }
 
     /**
+     * 获取最匹配的用户
+     * @param num
+     * @param request
+     * @return
+     */
+    @GetMapping("match")
+    public BaseResponse<List<User>> matchUsers(Long num, HttpServletRequest request){
+        if(num <= 0 || num > 20){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.matchUsers(num, loginUser));
+    }
+
+    /**
      * 用户信息更新
      * @param userUpdateDTO 封装的userDTO
      * @param request

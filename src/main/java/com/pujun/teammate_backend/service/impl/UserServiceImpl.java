@@ -10,9 +10,11 @@ import com.pujun.teammate_backend.exception.BusinessException;
 import com.pujun.teammate_backend.mapper.UserMapper;
 import com.pujun.teammate_backend.service.UserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pujun.teammate_backend.utils.AlgorithmUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Pair;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -317,5 +319,57 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         return (User) loginUser;
+    }
+
+    @Override
+    public List<User> matchUsers(Long num, User loginUser) {
+        //取数据库中所有拥有标签的用户列表
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "tags")
+                .isNotNull("tags");
+        List<User> userList = this.list(queryWrapper);
+        //取出自己的tags 转为List类型
+        String tags = loginUser.getTags();
+        Gson gson = new Gson();
+        List<String> loginUserTagList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        //用 List<Pair<User,Long>>存 用户 -> 相似度(也可以存下标id，目的是为了通过id查找所有数据)
+        List<Pair<User, Long>> list = new ArrayList<>();
+        //依次计算所有用户和当前用户的相似度
+        for (User user : userList) {
+            String userTags = user.getTags();
+            //无标签 或 该用户是自己
+            if(StringUtils.isBlank(userTags) || user.getId().equals(loginUser.getId())){
+                continue;
+            }
+            List<String> userTagList = gson.fromJson(userTags, new TypeToken<List<String>>() {
+            }.getType());
+            //计算分数 并存入 用户和对应分数
+            long distance = AlgorithmUtils.minDistance(userTagList, loginUserTagList);
+            list.add(new Pair<>(user, distance));
+        }
+        //按编辑距离由小到大排序
+        List<Pair<User, Long>> topUserPairList = list.stream()
+                .sorted((a, b) -> (int) (a.getValue() - b.getValue()))
+                .limit(num)
+                .collect(Collectors.toList());
+//        List<User> result = topUserPairList.stream().map(pair -> pair.getKey()).collect(Collectors.toList());
+        //再根据 id 把所有数据查出来
+        //原本顺序的 userId 列表
+        List<Long> userIdList = topUserPairList.stream().map(pair -> pair.getKey().getId()).collect(Collectors.toList());
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.in("id", userIdList);
+        // 这里的 in 方法 有bug
+        // 原本1 3 2 查时 1 2 3
+        //根据id查数据，用一个map来装 id 和 User实体，根据 userId 得到 User 实体
+        Map<Long, List<User>> userIdUserListMap =
+        this.list(userQueryWrapper).stream()
+                .map(this::getSafetyUser)
+                .collect(Collectors.groupingBy(User::getId));//groupingBY只是为了得到map 不加上也是根据id排列
+        List<User> finalUserList = new ArrayList<>();
+        for (Long userId : userIdList) { //根据原本顺序 查找对应的 User实体
+            finalUserList.add(userIdUserListMap.get(userId).get(0));
+        }
+        return finalUserList;
     }
 }

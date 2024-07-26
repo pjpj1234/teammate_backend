@@ -1,10 +1,13 @@
 package com.pujun.teammate_backend.once;
 
+import com.pujun.teammate_backend.entity.User;
 import com.pujun.teammate_backend.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
+
+import java.time.LocalDateTime;
 
 
 /**
@@ -26,7 +29,7 @@ public class ImportUsers {
         StopWatch stopWatch= new StopWatch();
         stopWatch.start(); // 定时器
         System.out.println("aaa");
-//        final int INSERT_NUM = 1000000;
+//        final int INSERT_NUM = 100000;
 //        for (int i = 0; i < INSERT_NUM; i++) {
 //            User user = new User();
 //            user.setUserAccount("test");
@@ -41,7 +44,7 @@ public class ImportUsers {
 //            user.setUserRole(0);
 //            user.setValidCode("110");
 //            user.setTags("[]");
-//
+
 //            userMapper.insert(user);
 //        }
         stopWatch.stop();

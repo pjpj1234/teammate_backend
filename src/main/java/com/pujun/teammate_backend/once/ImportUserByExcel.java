@@ -23,7 +23,7 @@ public class ImportUserByExcel {
 
     public static void main(String[] args) {
         //Excel数据文件放在自己电脑上，能够找到的路径
-        String fileName = "D:\\selfProject\\user_control_system\\teammate_backend-master\\src\\main\\resources\\TableInfo.xlsx";
+        String fileName = "D:\\selfProject\\teammate\\teammate_backend\\src\\main\\resources\\TableInfo.xlsx";
         // 这里 需要指定读用哪个class去读，然后读取第一个sheet 同步读取会自动finish
         List<UserTableInfo> userTableInfoList =
                 EasyExcel.read(fileName).head(UserTableInfo.class).sheet().doReadSync();

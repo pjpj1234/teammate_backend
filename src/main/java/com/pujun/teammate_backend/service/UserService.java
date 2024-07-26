@@ -92,6 +92,14 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 匹配用户
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    List<User> matchUsers(Long num, User loginUser);
 //    List<User> userFind(String userName, String gender, HttpServletRequest request);
 
 //    int userDelete(long id, HttpServletRequest request);
