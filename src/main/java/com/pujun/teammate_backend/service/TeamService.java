@@ -36,6 +36,21 @@ public interface TeamService extends IService<Team> {
     List<TeamUserVO> listTeams(TeamQueryDTO teamQueryDTO, boolean isAdmin,boolean isMy);
 
     /**
+     * 添加 hasJoin 字段，判断该队伍是否已加入
+     * @param teamList
+     * @param loginUser
+     * @return
+     */
+    List<TeamUserVO> addHasJoinField(List<TeamUserVO> teamList, User loginUser);
+
+    /**
+     * 计算每个队伍已加入的人数
+     * @param teamList
+     * @return
+     */
+    List<TeamUserVO> countTeamHasJoin(List<TeamUserVO> teamList);
+
+    /**
      * 更新队伍
      * @param teamUpdateDTO
      * @param loginUser
@@ -65,4 +80,6 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean removeTeam(Long id, User loginUser);
+
+
 }

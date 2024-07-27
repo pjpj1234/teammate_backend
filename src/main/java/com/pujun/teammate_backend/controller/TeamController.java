@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -119,8 +120,14 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         boolean isAdmin = userService.isAdmin(request);
+        User loginUser = userService.getLoginUser(request);
         List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, isAdmin, false);
-        return ResultUtils.success(teamList);
+        // 给每个自己已加入的队伍加上hasJoin
+        List<TeamUserVO> teamList1 = teamService.addHasJoinField(teamList, loginUser);
+        //计算每个队伍已加入人数
+        List<TeamUserVO> finalTeamList = teamService.countTeamHasJoin(teamList1);
+
+        return ResultUtils.success(finalTeamList);
     }
 
     /**
@@ -145,7 +152,10 @@ public class TeamController {
         List<Long> idList = new ArrayList<>(listMap.keySet()); //取key（teamId）出来
         teamQueryDTO.setIdList(idList); //设置进去
         List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, true, true);//复用方法
-        return ResultUtils.success(teamList);
+
+        List<TeamUserVO> teamList1 = teamService.addHasJoinField(teamList, userService.getLoginUser(request));
+        List<TeamUserVO> finalTeamList = teamService.countTeamHasJoin(teamList1);
+        return ResultUtils.success(finalTeamList);
     }
 
     /**
@@ -163,7 +173,8 @@ public class TeamController {
         Long userId = userService.getLoginUser(request).getId();
         teamQueryDTO.setUserId(userId);
         List<TeamUserVO> teamList = teamService.listTeams(teamQueryDTO, true, true);//复用方法
-        return ResultUtils.success(teamList);
+        List<TeamUserVO> finalTeamList = teamService.countTeamHasJoin(teamList);
+        return ResultUtils.success(finalTeamList);
     }
 
     @PostMapping("/join")
